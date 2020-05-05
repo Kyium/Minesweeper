@@ -31,12 +31,12 @@ def tk_widget_key_bind(widget: Union[Widget, Tk], key: str, function, args: Unio
 
 
 class MineSweeper:
-    graphics = {f"{i}": load_image(f"{i}.png") for i in range(1, 9)}
-    graphics["flag"] = load_image("flag.png")
-    graphics["blank"] = load_image("blank.png")
-    graphics["blank_c"] = load_image("blank(clear).png")
-    graphics["mine"] = load_image("mine.png")
-    graphics["mine_e"] = load_image("mine(exploded).png")
+    graphics = {f"{i}": load_image(f"Graphics/{i}.png") for i in range(1, 9)}
+    graphics["flag"] = load_image("Graphics/flag.png")
+    graphics["blank"] = load_image("Graphics/blank.png")
+    graphics["blank_c"] = load_image("Graphics/blank(clear).png")
+    graphics["mine"] = load_image("Graphics/mine.png")
+    graphics["mine_e"] = load_image("Graphics/mine(exploded).png")
     surroundings = [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
     def __init__(self, grid_size: Tuple[int, int], mines: int):
