@@ -1,10 +1,29 @@
 from threading import Thread  # QOLFAC: quality of life functions and classes, V:1.1
 from time import sleep, time as t
 from sqlite3 import connect, OperationalError
+from typing import Tuple
 
 
 class NotList(Exception):
     pass
+
+
+class InvalidRange(Exception):
+    pass
+
+
+def integer_range_validation(inp_txt: str, ran: Tuple[int, int], inclusive: Tuple[bool, bool] = (True, True)) -> int:
+    while 1:
+        try:
+            if ran[0] > ran[1] or (ran[0] == ran[1] and True not in inclusive):
+                raise InvalidRange(f"The range: {ran} is invalid")
+            integer = int(input(inp_txt + ": "))
+            if ran[0] - (1 if inclusive[0] else 0) < integer < ran[1] + (1 if inclusive[1] else 0):
+                return integer
+            else:
+                print(f"\nInput not in range, between {ran[0]} and {ran[1]}\n")
+        except ValueError:
+            print("\nInput was not an integer\n")
 
 
 def is_empty(data):

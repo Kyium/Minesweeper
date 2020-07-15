@@ -4,7 +4,8 @@ from functools import partial
 from random import randint, shuffle
 from time import sleep
 from PIL import Image, ImageTk
-from qolfac import StopWatch
+from qolfac import StopWatch, integer_range_validation as irv
+from threading import Thread
 
 
 def load_image(source: str):
@@ -19,7 +20,7 @@ def add_tuples(a: Tuple[int, int], b: Tuple[int, int]):
     return a[0] + b[0], a[1] + b[1]
 
 
-def tk_widget_key_bind(widget: Union[Widget, Tk], key: str, function, args: Union[tuple, list, None]):
+def tk_widget_key_bind(widget: Union[Widget, Tk], key: str, function, args: Union[tuple, list, None] = None):
     def buffer_function(b_args, _):
         function(*b_args)
     func = partial(buffer_function, args) if args is not None else buffer_function
@@ -47,10 +48,16 @@ class MineSweeper:
         self.__root = Tk()
         self.__graphics = {g: tk_image(MineSweeper.graphics[g]) for g in MineSweeper.graphics}
         self.__root.title("Minesweeper")
+        self.__root.resizable(False, False)
+        self.max_grid_size = (80, 80)
         self.__mine_count = mines
         self.__click_lock = False
         self.__key_lock = False
         self.__timer = StopWatch()
+        self.__ng_prompt = False
+        self.__p_thread = Thread(target=self.__prompt_thread, name="prompt_thread")
+        self.__p_thread.setDaemon(True)
+        self.__p_thread.start()
         for x in range(grid_size[0]):
             for y in range(grid_size[1]):
                 self.__grid[(x, y)] = {"label": Label(self.__root, width=32, height=32, borderwidth=0,
@@ -68,14 +75,28 @@ class MineSweeper:
         self.__timer.start()
         print("\nPress \"R\" to restart or \"N\" to change grid size and mine count.\n")
         self.__apply_mines()
-        tk_widget_key_bind(self.__root, "r", self.__reset_grid, (None,))
+        tk_widget_key_bind(self.__root, "r", self.__reset_grid)
+        tk_widget_key_bind(self.__root, "n", self.prompt_ng_input)
         while self.__running:
             self.__root.update()
 
     def stop(self):
         self.__running = False
 
-    def __reset_grid(self, _):
+    def prompt_ng_input(self):
+        self.__ng_prompt = True
+
+    def __prompt_thread(self):
+        while 1:
+            if self.__ng_prompt:
+                length = irv("length", (2, self.max_grid_size[0]))
+                height = irv("height", (2, self.max_grid_size[1]))
+                self.__mine_count = irv("Mines", (1, self.max_grid_size[0] * self.max_grid_size[1] - 1))
+                self.__grid_size = (length, height)
+                self.__reset_grid()
+                self.__ng_prompt = False
+
+    def __reset_grid(self):
         self.__timer.stop()
         self.__timer.reset()
         if not self.__key_lock:
