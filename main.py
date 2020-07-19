@@ -50,7 +50,7 @@ class MineSweeper:
         self.__graphics = {g: tk_image(MineSweeper.graphics[g]) for g in MineSweeper.graphics}
         self.__root.title("Minesweeper")
         self.__root.resizable(False, False)
-        self.max_grid_size = (80, 80)
+        self.max_grid_size: Tuple[int, int] = (80, 80)
         self.__mine_count = mines
         self.__click_lock = False
         self.__key_lock = False
@@ -60,19 +60,10 @@ class MineSweeper:
         self.__p_thread = Thread(target=self.__prompt_thread, name="new_game_setup")
         self.__p_thread.setDaemon(True)
         self.__p_thread.start()
-        for x in range(grid_size[0]):
-            for y in range(grid_size[1]):
-                self.__grid[(x, y)] = {"label": Label(self.__root, width=32, height=32, borderwidth=0,
-                                                      highlightthickness=0, image=self.__graphics["blank"]),
-                                       "attrs": {"tile": "blank", "mine": False}}
-                self.__grid[(x, y)]["label"].bind("<Button-1>", partial(self.__l_click, (x, y)))
-                self.__grid[(x, y)]["label"].bind("<Button-2>", partial(self.__r_click, (x, y)))
-                self.__grid[(x, y)]["label"].bind("<Button-3>", partial(self.__r_click, (x, y)))
+        self.__grid_init()
 
     def start(self):
-        for x in range(self.__grid_size[0]):
-            for y in range(self.__grid_size[1]):
-                self.__grid[(x, y)]["label"].grid(column=x+1, row=y+1, padx=0, pady=0)
+        self.grid_draw()
         self.__running = True
         self.__timer.start()
         print("\nPress \"R\" to restart or \"N\" to change grid size and mine count.\n")
@@ -85,6 +76,29 @@ class MineSweeper:
                 self.__reset_call = False
             self.__root.update()
 
+    def __grid_init(self):
+        self.__grid = {}
+        counter = 0
+        for x in range(self.__grid_size[0]):
+            for y in range(self.__grid_size[1]):
+                self.__grid[(x, y)] = {"label": Label(self.__root, width=32, height=32, borderwidth=0,
+                                       highlightthickness=0, image=self.__graphics["blank"]),
+                                       "attrs": {"tile": "blank", "mine": False}}
+                self.__grid[(x, y)]["label"].bind("<Button-1>", partial(self.__l_click, (x, y)))
+                self.__grid[(x, y)]["label"].bind("<Button-2>", partial(self.__r_click, (x, y)))
+                self.__grid[(x, y)]["label"].bind("<Button-3>", partial(self.__r_click, (x, y)))
+                counter += 1
+        print(self.__grid_size, counter)
+
+    def __grid_remove(self):
+        for key in self.__grid:
+            self.__grid[key]["label"].grid_remove()
+
+    def grid_draw(self):
+        for x in range(self.__grid_size[0]):
+            for y in range(self.__grid_size[1]):
+                self.__grid[(x, y)]["label"].grid(column=x+1, row=y+1, padx=0, pady=0)
+
     def stop(self):
         self.__running = False
 
@@ -93,7 +107,9 @@ class MineSweeper:
 
     def __prompt_thread(self):
         while 1:
+            sleep(0.5)
             if self.__ng_prompt:
+                print("\n-New game-")
                 length = irv("length", (2, self.max_grid_size[0]))
                 height = irv("height", (2, self.max_grid_size[1]))
                 self.__mine_count = irv("Mines", (1, self.max_grid_size[0] * self.max_grid_size[1] - 1))
@@ -104,6 +120,9 @@ class MineSweeper:
     def __reset_grid(self):
         self.__timer.stop()
         self.__timer.reset()
+        self.__grid_remove()
+        self.__grid_init()
+        self.grid_draw()
         if not self.__key_lock:
             for g in self.__grid:
                 self.__set_tile(g, "blank")
