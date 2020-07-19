@@ -78,7 +78,6 @@ class MineSweeper:
 
     def __grid_init(self):
         self.__grid = {}
-        counter = 0
         for x in range(self.__grid_size[0]):
             for y in range(self.__grid_size[1]):
                 self.__grid[(x, y)] = {"label": Label(self.__root, width=32, height=32, borderwidth=0,
@@ -87,8 +86,6 @@ class MineSweeper:
                 self.__grid[(x, y)]["label"].bind("<Button-1>", partial(self.__l_click, (x, y)))
                 self.__grid[(x, y)]["label"].bind("<Button-2>", partial(self.__r_click, (x, y)))
                 self.__grid[(x, y)]["label"].bind("<Button-3>", partial(self.__r_click, (x, y)))
-                counter += 1
-        print(self.__grid_size, counter)
 
     def __grid_remove(self):
         for key in self.__grid:
@@ -113,6 +110,7 @@ class MineSweeper:
                 length = irv("length", (2, self.max_grid_size[0]))
                 height = irv("height", (2, self.max_grid_size[1]))
                 self.__mine_count = irv("Mines", (1, self.max_grid_size[0] * self.max_grid_size[1] - 1))
+                print("")
                 self.__grid_size = (length, height)
                 self.__reset_call = True
                 self.__ng_prompt = False
