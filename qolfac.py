@@ -1,7 +1,7 @@
 from threading import Thread  # QOLFAC: quality of life functions and classes, V:1.1
 from time import sleep, time as t
 from sqlite3 import connect, OperationalError
-from typing import Tuple
+from typing import Tuple, Dict, Union
 
 
 class NotList(Exception):
@@ -24,6 +24,17 @@ def integer_range_validation(inp_txt: str, ran: Tuple[int, int], inclusive: Tupl
                 print(f"\nInput not in range, between {ran[0]} and {ran[1]}\n")
         except ValueError:
             print("\nInput was not an integer\n")
+
+
+def dynamic_arg_count_function(function, args: Union[tuple, None] = None, kwargs: Union[Dict[str, any], None] = None):
+    if args is not None and kwargs is not None:
+        function(*args, **kwargs)
+    elif args is not None and kwargs is None:
+        function(*args)
+    elif args is None and kwargs is not None:
+        function(**kwargs)
+    elif args is None and kwargs is None:
+        function()
 
 
 def is_empty(data):

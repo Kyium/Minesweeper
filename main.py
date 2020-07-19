@@ -1,11 +1,12 @@
 from tkinter import Tk, Label, Widget
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 from functools import partial
 from random import randint, shuffle
 from time import sleep
 from PIL import Image, ImageTk
-from qolfac import StopWatch, integer_range_validation as irv
+from qolfac import StopWatch, integer_range_validation as irv, dynamic_arg_count_function as dac
 from threading import Thread
+from string import ascii_letters
 
 
 def load_image(source: str):
@@ -20,15 +21,15 @@ def add_tuples(a: Tuple[int, int], b: Tuple[int, int]):
     return a[0] + b[0], a[1] + b[1]
 
 
-def tk_widget_key_bind(widget: Union[Widget, Tk], key: str, function, args: Union[tuple, list, None] = None):
-    def buffer_function(b_args, _):
-        function(*b_args)
-    func = partial(buffer_function, args) if args is not None else buffer_function
-    if len(key) == 1:
-        widget.bind(key.lower(), func)
-        widget.bind(key.upper(), func)
+def tk_widget_key_bind(widget: Union[Widget, Tk], key: str, function, args: Union[tuple, list, None] = None,
+                       kwargs: Union[Dict[str, any], None] = None):
+    def buffer_function(_):
+        dac(function, args, kwargs)
+    if key in ascii_letters:
+        widget.bind(key.lower(), buffer_function)
+        widget.bind(key.upper(), buffer_function)
     else:
-        widget.bind(key, func)
+        widget.bind(key, buffer_function)
 
 
 class MineSweeper:
@@ -53,9 +54,10 @@ class MineSweeper:
         self.__mine_count = mines
         self.__click_lock = False
         self.__key_lock = False
+        self.__reset_call = False
         self.__timer = StopWatch()
         self.__ng_prompt = False
-        self.__p_thread = Thread(target=self.__prompt_thread, name="prompt_thread")
+        self.__p_thread = Thread(target=self.__prompt_thread, name="new_game_setup")
         self.__p_thread.setDaemon(True)
         self.__p_thread.start()
         for x in range(grid_size[0]):
@@ -78,6 +80,9 @@ class MineSweeper:
         tk_widget_key_bind(self.__root, "r", self.__reset_grid)
         tk_widget_key_bind(self.__root, "n", self.prompt_ng_input)
         while self.__running:
+            if self.__reset_call:
+                self.__reset_grid()
+                self.__reset_call = False
             self.__root.update()
 
     def stop(self):
@@ -93,7 +98,7 @@ class MineSweeper:
                 height = irv("height", (2, self.max_grid_size[1]))
                 self.__mine_count = irv("Mines", (1, self.max_grid_size[0] * self.max_grid_size[1] - 1))
                 self.__grid_size = (length, height)
-                self.__reset_grid()
+                self.__reset_call = True
                 self.__ng_prompt = False
 
     def __reset_grid(self):
