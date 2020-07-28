@@ -281,6 +281,8 @@ class MineSweeper:
 
 
 if __name__ == '__main__':
+    print("\n--Started--\n")
     resolution = (1024, 1080)
     game = MineSweeper((15, 15), 50, resolution)
     game.start()
+    print("\n--Ended--\n")
