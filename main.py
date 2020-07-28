@@ -1,4 +1,4 @@
-from tkinter import Tk, Label, Widget
+from tkinter import Tk, Label, Widget, Canvas, Scrollbar
 from typing import Tuple, Union, Dict
 from functools import partial
 from random import randint, shuffle
@@ -41,16 +41,20 @@ class MineSweeper:
     graphics["mine_e"] = load_image("Graphics/mine(exploded).png")
     surroundings = [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
-    def __init__(self, grid_size: Tuple[int, int], mines: int):
+    def __init__(self, grid_size: Tuple[int, int], mines: int, resolution: Tuple[int, int]):
         assert mines < grid_size[0] * grid_size[1] - 1, "Too many mines."
         self.__running = True
         self.__grid_size = grid_size
         self.__grid = {}
         self.__root = Tk()
+        self.__tile_grid = Canvas(self.__root)
+        # self.x_bar = Scrollbar(self.__root, orient="horizontal")
+        # self.y_bar = Scrollbar(self.__root)
+        # self.x_bar.configure()
         self.__graphics = {g: tk_image(MineSweeper.graphics[g]) for g in MineSweeper.graphics}
         self.__root.title("Minesweeper")
         self.__root.resizable(False, False)
-        self.max_grid_size: Tuple[int, int] = (80, 80)
+        self.max_grid_size: Tuple[int, int] = (resolution[0] // 30, resolution[1] //30)
         self.__mine_count = mines
         self.__click_lock = False
         self.__key_lock = False
@@ -65,6 +69,9 @@ class MineSweeper:
     def start(self):
         self.grid_draw()
         self.__running = True
+        self.__tile_grid.grid(column=0, row=0, sticky="nsew")
+        # self.x_bar.grid(column=0, row=1, sticky="ew")
+        # self.y_bar.grid(column=1, row=0, sticky="ns")
         self.__timer.start()
         print("\nPress \"R\" to restart or \"N\" to change grid size and mine count.\n")
         self.__apply_mines()
@@ -80,7 +87,7 @@ class MineSweeper:
         self.__grid = {}
         for x in range(self.__grid_size[0]):
             for y in range(self.__grid_size[1]):
-                self.__grid[(x, y)] = {"label": Label(self.__root, width=32, height=32, borderwidth=0,
+                self.__grid[(x, y)] = {"label": Label(self.__tile_grid, width=32, height=32, borderwidth=0,
                                        highlightthickness=0, image=self.__graphics["blank"]),
                                        "attrs": {"tile": "blank", "mine": False}}
                 self.__grid[(x, y)]["label"].bind("<Button-1>", partial(self.__l_click, (x, y)))
@@ -101,6 +108,9 @@ class MineSweeper:
 
     def prompt_ng_input(self):
         self.__ng_prompt = True
+
+    def canvas_resize(self):
+        self.__tile_grid.configure(width="")
 
     def __prompt_thread(self):
         while 1:
@@ -271,5 +281,6 @@ class MineSweeper:
 
 
 if __name__ == '__main__':
-    game = MineSweeper((15, 15), 50)
+    resolution = (1024, 1080)
+    game = MineSweeper((15, 15), 50, resolution)
     game.start()
